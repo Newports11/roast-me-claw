@@ -58,6 +58,24 @@ Be brutal and specific. Include:
 JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:3,"verdict":"verdict"}`;
 
+// Helper for API calls with retry
+async function fetchWithRetry(url, options, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.status === 429 && i < retries) {
+        console.log('Rate limited, retrying...');
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        continue;
+      }
+      return response;
+    } catch (e) {
+      if (i === retries) throw e;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+}
+
 async function generateRoast(type, content) {
   console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
   console.log('OPENAI_API_KEY present:', !!OPENAI_API_KEY);
@@ -67,7 +85,7 @@ async function generateRoast(type, content) {
   if (GEMINI_API_KEY) {
     try {
       console.log('Calling Gemini API...');
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
+      const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -95,7 +113,7 @@ async function generateRoast(type, content) {
   if (OPENAI_API_KEY) {
     try {
       console.log('Calling OpenAI API...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -128,7 +146,7 @@ async function generateRoast(type, content) {
   if (GROQ_API_KEY) {
     try {
       console.log('Calling Groq API...');
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const response = await fetchWithRetry('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -157,18 +175,12 @@ async function generateRoast(type, content) {
     }
   }
   
-  return getMockRoast(content);
+  // No APIs available - throw error
+  throw new Error('All AI APIs failed. Please try again later.');
 }
 
 function getMockRoast(content) {
-  const roasts = [
-    { title: "Another 'Innovative' Solution", points: ["Tagline = thesaurus on steroids", "Startup or art project?", "'Revolutionary' = Excel 1997", "Hero = buzzword salad", "Pricing hidden like treasure"], score: 3, verdict: "Bold to assume anyone needs this" },
-    { title: "Peak Startup Energy", points: ["Name sounds AI-generated", "About = 'we're a family' cult", "Hero = stock photo", "Five 'we're hiring'", "CTA = verbal shrug"], score: 4, verdict: "4/10 would not click again" },
-    { title: "Y2K Aesthetic, 2026 Problems", points: ["Design = intern's WordPress", "Value prop needs 30-min read", "Loading > TED talks", "Mobile responsive in theory", "More typos than features"], score: 2, verdict: "What's killing startup ecosystem" }
-  ];
-  const roast = roasts[Math.floor(Math.random() * roasts.length)];
-  if (content.toLowerCase().includes('ai')) { roast.points[0] = "AI in 2026? Revolutionary."; roast.score = Math.max(1, roast.score - 1); }
-  return roast;
+  throw new Error('No mock responses enabled');
 }
 
 // ========== VIRAL FEATURES ==========
