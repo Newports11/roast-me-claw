@@ -49,9 +49,11 @@ JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:7,"verdict":"verdict"}`;
 
 async function generateRoast(type, content) {
+  console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
   if (!GEMINI_API_KEY) return getMockRoast(content);
   
   try {
+    console.log('Calling Gemini API...');
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
