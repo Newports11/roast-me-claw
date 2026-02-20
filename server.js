@@ -316,10 +316,6 @@ app.get('/', (req, res) => {
     .trending-topics{display:flex;flex-wrap:wrap;gap:10px}
     .trending-topic{background:#2a2a2a;padding:8px 16px;border-radius:20px;font-size:0.9rem;cursor:pointer;transition:background 0.2s}
     .trending-topic:hover{background:#3a3a3a}
-    .featured{background:linear-gradient(135deg,#1a1a1a,#2a1a1a);border:1px solid #ff4d4d;border-radius:12px;padding:20px;margin-bottom:30px}
-    .featured h3{color:#ff4d4d;margin-bottom:10px}
-    .featured-roast{font-size:1.1rem;margin:10px 0}
-    .featured-score{color:#ff9f43;font-weight:bold}
     .input-section{background:#1a1a1a;border-radius:16px;padding:30px;margin-bottom:40px}
     textarea,input{width:100%;padding:16px;background:#0a0a0a;border:2px solid #2a2a2a;border-radius:8px;color:#fff;font-size:1rem;margin-bottom:15px}
     textarea:focus,input:focus{outline:none;border-color:#ff4d4d}
@@ -363,11 +359,6 @@ app.get('/', (req, res) => {
       <div class=social-proof-num id=roast-today>--</div>
       <div class=social-proof-label>roasts today</div>
       <div style="margin-top:10px;color:#666;font-size:0.8rem"><span id=roast-all>--</span> total roasts</div>
-    </div>
-    
-    <div class=featured id=featured-section>
-      <h3>🏆 Highest Scores (Survivors)</h3>
-      <div id=featured-roast></div>
     </div>
     
     <div class=input-section>
@@ -420,13 +411,6 @@ app.get('/', (req, res) => {
         const data = await res.json();
         document.getElementById("roast-today").textContent = data.today;
         document.getElementById("roast-all").textContent = data.allTime;
-        
-        // Load featured (highest scores)
-        if (data.trending && data.trending.length > 0) {
-          document.getElementById("featured-roast").innerHTML = data.trending.slice(0, 3).map(r => 
-            '<div class="featured-roast"><span class="featured-score">'+r.score+'/10</span> - '+r.title+'</div>'
-          ).join("");
-        }
       } catch(e) {}
     }
     
