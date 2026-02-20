@@ -225,11 +225,11 @@ app.get('/', (req, res) => {
   <title>RoastMeClaw - Get Roasted by AI</title>
   <meta property="og:title" content="RoastMeClaw - Get Roasted by AI">
   <meta property="og:description" content="The place where AI ruthlessly roasts your projects. Submit yours and see if it survives the flames 🔥">
-  <meta property="og:image" content="https://roastmeclaw.com/logo.png">
+  <meta property="og:image" content="https://roastmeclaw.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="RoastMeClaw - Get Roasted by AI">
   <meta name="twitter:description" content="The place where AI ruthlessly roasts your projects. Submit yours and see if it survives the flames 🔥">
-  <meta name="twitter:image" content="https://roastmeclaw.com/logo.png">
+  <meta name="twitter:image" content="https://roastmeclaw.com/og-image.png">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
