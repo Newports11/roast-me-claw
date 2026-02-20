@@ -350,11 +350,6 @@ app.get('/', (req, res) => {
       <div style="margin-top:10px;color:#666;font-size:0.8rem"><span id=roast-all>--</span> total roasts</div>
     </div>
     
-    <div class=trending id=trending-section>
-      <h3>🔥 Trending</h3>
-      <div class=trending-topics id=trending-topics></div>
-    </div>
-    
     <div class=featured id=featured-section>
       <h3>🏆 Highest Scores (Survivors)</h3>
       <div id=featured-roast></div>
