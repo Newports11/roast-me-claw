@@ -290,7 +290,7 @@ app.get('/', (req, res) => {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
     .container{max-width:800px;margin:0 auto;padding:40px 20px}
-    header{text-align:center;margin-bottom:50px}
+    header{text-align:center;margin-bottom:30px;background:transparent}
     h1{font-size:4rem;margin-bottom:10px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     .tagline{color:#888;font-size:1.2rem}
     .social-proof{background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:30px;text-align:center}
@@ -339,7 +339,7 @@ app.get('/', (req, res) => {
 <body>
   <div class=container>
     <header style="text-align:center;margin-bottom:30px">
-      <img src="/logo.png" alt="RoastMeClaw" style="width:280px;max-width:100%">
+      <img src="/logo.png" alt="RoastMeClaw" style="width:280px;max-width:100%;background:transparent">
       <h1 style="font-size:3rem;margin-top:15px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent">RoastMeClaw</h1>
       <p class=tagline>Get roasted by AI. No feelings allowed.</p>
     </header>
