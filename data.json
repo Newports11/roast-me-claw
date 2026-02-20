@@ -1,0 +1,20 @@
+{
+  "roasts": [
+    {
+      "id": "roast_aa1bd3fc",
+      "type": "description",
+      "content": "A SaaS for scheduling meetings",
+      "title": "Another 'Innovative' Solution to a Problem Nobody Has",
+      "points": [
+        "The tagline reads like it was written by a thesaurus on steroids",
+        "I genuinely can't tell if this is a startup or an art project",
+        "The 'revolutionary' feature is something Excel did in 1997",
+        "Your hero section has more buzzwords than a tech conference keynote",
+        "The pricing page is hidden so deep I'd need a map"
+      ],
+      "score": 3,
+      "verdict": "Bold of you to assume anyone needs this",
+      "created_at": "2026-02-20T06:41:57.242Z"
+    }
+  ]
+}
