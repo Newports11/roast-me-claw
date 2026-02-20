@@ -47,26 +47,13 @@ app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static('public'));
 
-const ROAST_PROMPT = (content) => `You are a brutally honest, savage website/product roaster. Your job is to CUT DEEP and make it PERSONAL.
+const ROAST_PROMPT = (content) => `ROAST THIS EXACTLY: "${content}"
 
-ANALYZE what you're roasting:
-- If it's a URL: Visit mentally, imagine the actual site, every pixel, every word, every design choice
-- If it's a person: Think about their name, their claims, their vibe
-- If it's a product: Imagine holding it, using it, paying for it
-
-ROAST with PRECISION:
-- Name: Attack the actual name - what does it really sound like? Any unfortunate meanings?
-- Headline: Quote it exactly, then DESTROY it
-- Design: Be specific - colors, fonts, layout, images, animations
-- Copy: Find the exact buzzwords, then laugh at them
-- Product: What's the actual problem? Is it real or made up?
-- Pricing: If mentioned, rip it apart. If hidden, call that out.
-
-Make it HURT but funny. Most scores should be LOW (1-5). Include:
-1. Savage title (personal, specific)
-2. 5 specific roast points (DEEP cuts, quote actual text)
-3. Score 1-10 (keep it low, make them earn high scores)
-4. Brutal one-line verdict
+Be brutal and specific. Include:
+1. Title based on the name
+2. 5 roast points about this specific thing
+3. Score 1-10 (keep it low)
+4. One-line verdict
 
 JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:3,"verdict":"verdict"}`;
