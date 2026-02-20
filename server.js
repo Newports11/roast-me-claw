@@ -18,6 +18,10 @@ try {
 } catch (e) {}
 function saveDB() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 
+// Initialize db structure if missing
+if (!db.emails) db.emails = [];
+if (!db.dailyStats) db.dailyStats = { date: new Date().toISOString().split('T')[0], count: 0 };
+
 // Reset daily stats if new day
 function updateDailyStats() {
   const today = new Date().toISOString().split('T')[0];
