@@ -416,22 +416,14 @@ app.get('/', (req, res) => {
         const data = await res.json();
         document.getElementById("roast-today").textContent = data.today;
         document.getElementById("roast-all").textContent = data.allTime;
+        
+        // Load featured (highest scores)
+        if (data.trending && data.trending.length > 0) {
+          document.getElementById("featured-roast").innerHTML = data.trending.slice(0, 3).map(r => 
+            '<div class="featured-roast"><span class="featured-score">'+r.score+'/10</span> - '+r.title+'</div>'
+          ).join("");
+        }
       } catch(e) {}
-    }
-    
-    async function loadTrending() {
-      try {
-        const res = await fetch("/api/trending");
-        const data = await res.json();
-        document.getElementById("trending-topics").innerHTML = data.map(t => 
-          '<span class=trending-topic onclick="useTopic(\\''+t.topic+'\\')">#'+t.topic+'</span>'
-        ).join("");
-      } catch(e) {}
-    }
-    
-    function useTopic(topic) {
-      document.getElementById("description").value = topic + " - ";
-      document.getElementById("description").focus();
     }
     
     async function doRoast() {
@@ -501,7 +493,6 @@ app.get('/', (req, res) => {
     }
     
     loadSocial();
-    loadTrending();
   </script>
 </body>
 </html>`;
