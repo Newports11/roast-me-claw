@@ -7,6 +7,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3002;
 const DATA_FILE = path.join(__dirname, 'data.json');
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Simple DB
 let db = { roasts: [] };
@@ -19,28 +20,85 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Roast prompt
-const SYSTEM_PROMPT = `You are a witty, savage but funny product/website roaster. Your job is to roast the user's product or website.
+// Roast prompt - meaner and more specific
+const ROAST_PROMPT = (content) => `You are a brutally honest, savage but funny website/product roaster. Your job is to roast this website/product: "${content}"
 
-Rules:
-- Be funny and sarcastic
-- Roast the name, tagline, design, copy, pricing, positioning
-- Be a bit mean but not cruel - it's all in good fun
-- Include 3-5 roast points
-- End with an overall roast score out of 10
-- Don't hold back - this is roast mode!
+Be extremely specific about what you actually see on this site. Roast:
+- The name/brand
+- The headline/tagline
+- The design/aesthetics  
+- The copy/writing
+- The product/service itself
+- The pricing (if visible)
+- Any obvious clichés or buzzwords
 
-Format as JSON:
+Make it HURT but in a funny way. Be specific - don't just say "bad design" say EXACTLY what's wrong.
+
+Include:
+1. A savage roast title (make it clever)
+2. 5 specific roast points (each should reference something REAL from the site)
+3. A score from 1-10
+4. A brutal one-line verdict
+
+Respond ONLY in this exact JSON format:
 {
-  "title": "Funny roast title",
-  "points": ["point 1", "point 2", "point 3", "point 4", "point 5"],
+  "title": "Your savage title here",
+  "points": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
   "score": 7,
-  "verdict": "One sentence summary"
+  "verdict": "One brutal sentence"
 }`;
 
-// Simulate AI roast (replace with real API key for production)
+// Real AI roast using Gemini
 async function generateRoast(type, content) {
-  // For demo, generate a mock roast
+  // If no API key, fall back to mock
+  if (!GEMINI_API_KEY) {
+    return getMockRoast(content);
+  }
+  
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
+        generationConfig: {
+          temperature: 1.2, // Higher = more creative/savage
+          maxOutputTokens: 1024,
+          responseSchema: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              points: { type: "array", items: { type: "string" } },
+              score: { type: "number" },
+              verdict: { type: "string" }
+            },
+            required: ["title", "points", "score", "verdict"]
+          }
+        }
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      const text = data.candidates[0].content.parts[0].text;
+      // Parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    }
+    
+    // Fallback if parsing fails
+    return getMockRoast(content);
+  } catch (e) {
+    console.error('Gemini error:', e.message);
+    return getMockRoast(content);
+  }
+}
+
+// Mock roasts for fallback
+function getMockRoast(content) {
   const roasts = [
     {
       title: "Another 'Innovative' Solution to a Problem Nobody Has",
@@ -80,10 +138,9 @@ async function generateRoast(type, content) {
     }
   ];
   
-  // Pick random roast and customize slightly
   const roast = roasts[Math.floor(Math.random() * roasts.length)];
   
-  // Add some variety based on content
+  // Customize based on content
   if (content.toLowerCase().includes('ai')) {
     roast.points[0] = "AI in 2026? Revolutionary. Next you'll tell me you have a mobile app.";
     roast.score = Math.max(1, roast.score - 1);
@@ -408,5 +465,6 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🔥 RoastMe running on http://localhost:${PORT}`);
+  console.log(`🔥 RoastMeClaw running on http://localhost:${PORT}`);
+  console.log(`   AI Mode: ${GEMINI_API_KEY ? 'GEMINI (real roasts!)' : 'DEMO (mock roasts)'}`);
 });
