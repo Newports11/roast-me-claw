@@ -182,53 +182,14 @@ async function generateRoast(type, content) {
   throw new Error('All AI APIs failed. Please try again later.');
 }
 
-function getMockRoast(content) {
-  throw new Error('No mock responses enabled');
-}
-
-// ========== VIRAL FEATURES ==========
+// ========== SOCIAL PROOF ==========
 
 function getSocialProof() {
   updateDailyStats();
   return {
     today: db.dailyStats.count,
-    allTime: db.roasts.length,
-    trending: getTrendingRoasts()
+    allTime: db.roasts.length
   };
-}
-
-function getTrendingRoasts() {
-  return db.roasts
-    .filter(r => r.content && r.content.length > 10)
-    .sort((a, b) => (b.score || 1) - (a.score || 1))  // Highest score first
-    .slice(0, 5)
-    .map(r => ({
-      title: r.title,
-      score: r.score,
-      content: r.content.substring(0, 50) + '...'
-    }));
-}
-
-const TRENDING_TOPICS = [
-  'AI startup', 'crypto', 'SaaS', 'mobile app', 'e-commerce',
-  'fintech', 'healthtech', 'edtech', 'social media', 'portfolio'
-];
-
-function getTrendingTopics() {
-  const recent = db.roasts.slice(-50);
-  const topics = {};
-  TRENDING_TOPICS.forEach(t => topics[t] = 0);
-  
-  recent.forEach(r => {
-    TRENDING_TOPICS.forEach(t => {
-      if (r.content && r.content.toLowerCase().includes(t)) topics[t]++;
-    });
-  });
-  
-  return Object.entries(topics)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([topic, count]) => ({ topic, count }));
 }
 
 // ========== API ROUTES ==========
@@ -253,17 +214,7 @@ app.post('/api/roast', rateLimiter, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/roast/:id', (req, res) => {
-  const roast = db.roasts.find(r => r.id === req.params.id);
-  if (!roast) return res.status(404).json({ error: 'Not found' });
-  res.json(roast);
-});
-
-app.get('/api/roasts', (req, res) => { res.json(db.roasts.slice(-20).reverse()); });
-
 app.get('/api/social', (req, res) => { res.json(getSocialProof()); });
-
-app.get('/api/trending', (req, res) => { res.json(getTrendingTopics()); });
 
 app.get('/', (req, res) => {
   const html = `<!DOCTYPE html>
@@ -282,11 +233,6 @@ app.get('/', (req, res) => {
     .social-proof{background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:30px;text-align:center}
     .social-proof-num{font-size:2rem;font-weight:bold;color:#ff9f43}
     .social-proof-label{color:#666;font-size:0.9rem}
-    .trending{background:#1a1a1a;border-radius:12px;padding:20px;margin-bottom:30px}
-    .trending h3{color:#ff4d4d;margin-bottom:15px}
-    .trending-topics{display:flex;flex-wrap:wrap;gap:10px}
-    .trending-topic{background:#2a2a2a;padding:8px 16px;border-radius:20px;font-size:0.9rem;cursor:pointer;transition:background 0.2s}
-    .trending-topic:hover{background:#3a3a3a}
     .input-section{background:#1a1a1a;border-radius:16px;padding:30px;margin-bottom:40px}
     textarea,input{width:100%;padding:16px;background:#0a0a0a;border:2px solid #2a2a2a;border-radius:8px;color:#fff;font-size:1rem;margin-bottom:15px}
     textarea:focus,input:focus{outline:none;border-color:#ff4d4d}
@@ -349,9 +295,6 @@ app.get('/', (req, res) => {
   </div>
   
   <script>
-    let currentRoast = null;
-    let referralCode = null;
-    
     async function loadSocial() {
       try {
         const res = await fetch("/api/social");
@@ -375,7 +318,6 @@ app.get('/', (req, res) => {
         });
         const data = await res.json();
         
-        currentRoast = data;
         document.getElementById("result-title").textContent = data.title;
         document.getElementById("score").textContent = data.score;
         document.getElementById("points").innerHTML = data.points.map(p => "<li>"+p+"</li>").join("");
