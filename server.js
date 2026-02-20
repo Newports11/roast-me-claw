@@ -12,14 +12,13 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Simple DB
-let db = { roasts: [], emails: [], dailyStats: { date: new Date().toISOString().split('T')[0], count: 0 } };
+let db = { roasts: [], dailyStats: { date: new Date().toISOString().split('T')[0], count: 0 } };
 try {
   if (fs.existsSync(DATA_FILE)) db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 } catch (e) {}
 function saveDB() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 
 // Initialize db structure if missing
-if (!db.emails) db.emails = [];
 if (!db.dailyStats) db.dailyStats = { date: new Date().toISOString().split('T')[0], count: 0 };
 
 // Reset daily stats if new day
@@ -234,31 +233,8 @@ function getTrendingTopics() {
 
 // ========== API ROUTES ==========
 
-app.post('/api/subscribe', (req, res) => {
-  const { email, referrer } = req.body;
-  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
-  
-  if (db.emails.find(e => e.email === email)) {
-    return res.json({ message: 'Already subscribed!', referralCode: db.emails.find(e => e.email === email).code });
-  }
-  
-  const code = uuidv4().slice(0, 8);
-  db.emails.push({ email, referrer: referrer || null, code, created_at: new Date().toISOString() });
-  saveDB();
-  
-  res.json({ message: 'Subscribed!', referralCode: code });
-});
-
-app.get('/api/referrals/:code', (req, res) => {
-  const ref = db.emails.find(e => e.code === req.params.code);
-  if (!ref) return res.status(404).json({ error: 'Not found' });
-  
-  const referredCount = db.emails.filter(e => e.referrer === ref.code).length;
-  res.json({ referredCount });
-});
-
 app.post('/api/roast', rateLimiter, async (req, res) => {
-  const { type, content, email, referrer } = req.body;
+  const { type, content } = req.body;
   if (!content) return res.status(400).json({ error: 'content required' });
   if (typeof content !== 'string') return res.status(400).json({ error: 'content must be string' });
   if (content.length < 3) return res.status(400).json({ error: 'content too short' });
@@ -271,11 +247,6 @@ app.post('/api/roast', rateLimiter, async (req, res) => {
     db.roasts.push(record);
     
     updateDailyStats();
-    
-    if (email && !db.emails.find(e => e.email === email)) {
-      const code = uuidv4().slice(0, 8);
-      db.emails.push({ email, referrer: referrer || null, code, created_at: new Date().toISOString() });
-    }
     
     saveDB();
     res.json({ ...record, socialProof: getSocialProof() });
@@ -336,14 +307,6 @@ app.get('/', (req, res) => {
     .share-btns{display:flex;gap:10px;margin-top:20px}
     .share-btn{flex:1;padding:15px;background:#000;border:2px solid #fff;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer;text-align:center;text-decoration:none;display:block}
     .share-btn:hover{background:#fff;color:#000}
-    .email-section{margin-top:30px;padding-top:20px;border-top:1px solid #2a2a2a}
-    .email-section p{color:#666;font-size:0.9rem;margin-bottom:10px}
-    .email-input{display:flex;gap:10px}
-    .email-input input{flex:1;margin-bottom:0}
-    .email-input button{padding:16px 24px;background:#2a2a2a;border:none;border-radius:8px;color:#fff;cursor:pointer}
-    .referral-box{background:#2a2a2a;border-radius:8px;padding:15px;margin-top:15px;display:none}
-    .referral-box.show{display:block}
-    .referral-code{font-family:monospace;font-size:1.2rem;color:#ff9f43;word-break:break-all}
     .disclaimer{text-align:center;color:#444;font-size:0.9rem;margin-top:40px}
   </style>
 </head>
@@ -379,22 +342,6 @@ app.get('/', (req, res) => {
       
       <div class=share-btns>
         <a href=# class=share-btn id=share-btn target=_blank>Share on X</a>
-        <a href=# class=share-btn id=share-btn-whatsapp target=_blank>Share on WhatsApp</a>
-      </div>
-      
-      <div class=email-section>
-        <p>🔒 Save your roast & get a secret bonus roast (free)</p>
-        <div class=email-input>
-          <input type=email id=email placeholder="your@email.com">
-          <button onclick="subscribe()">Save</button>
-        </div>
-        <div class=referral-box id=referral-box>
-          <p style="margin-bottom:5px">🎉 You're in! Share your referral link:</p>
-          <p class=referral-code id=referral-code></p>
-          <p style="margin-top:10px;color:#666;font-size:0.8rem">Or roast a friend's site:</p>
-          <input type=text id=friend-link placeholder="Friend's website..." style="margin-top:10px">
-          <button onclick="roastFriend()" style="margin-top:10px;width:100%;padding:12px;background:#ff4d4d;border:none;border-radius:8px;color:#fff;cursor:pointer">Roast Their Site</button>
-        </div>
       </div>
     </div>
     
@@ -421,11 +368,10 @@ app.get('/', (req, res) => {
       document.getElementById("result").classList.remove("show");
       
       try {
-        const email = document.getElementById("email").value;
         const res = await fetch("/api/roast", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({type: "description", content, email})
+          body: JSON.stringify({type: "description", content})
         });
         const data = await res.json();
         
@@ -437,7 +383,6 @@ app.get('/', (req, res) => {
         
         const tweetText = "I got roasted by @roastmeclaw! " + data.title + " Score: " + data.score + "/10 - " + data.verdict;
         document.getElementById("share-btn").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
-        document.getElementById("share-btn-whatsapp").href = "https://wa.me/?text=" + encodeURIComponent(tweetText + " https://roastmeclaw.com");
         
         document.getElementById("loading").classList.remove("show");
         document.getElementById("result").classList.add("show");
@@ -450,34 +395,6 @@ app.get('/', (req, res) => {
         alert("Roast failed.");
         document.getElementById("loading").classList.remove("show");
       }
-    }
-    
-    async function subscribe() {
-      const email = document.getElementById("email").value;
-      if (!email) return alert("Enter your email!");
-      
-      try {
-        const res = await fetch("/api/subscribe", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({email})
-        });
-        const data = await res.json();
-        referralCode = data.referralCode;
-        document.getElementById("referral-code").textContent = "https://roastmeclaw.com?ref=" + data.referralCode;
-        document.getElementById("referral-box").classList.add("show");
-        alert("Saved! Your roast is now saved.");
-      } catch(e) {
-        alert("Could not save.");
-      }
-    }
-    
-    function roastFriend() {
-      const link = document.getElementById("friend-link").value;
-      if (!link) return alert("Enter your friend's website!");
-      document.getElementById("description").value = link;
-      window.scrollTo(0, 0);
-      alert("Now roast their site! 😈");
     }
     
     loadSocial();
