@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Simple DB
 let db = { roasts: [] };
@@ -50,32 +51,71 @@ JSON only:
 
 async function generateRoast(type, content) {
   console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
-  if (!GEMINI_API_KEY) return getMockRoast(content);
+  console.log('OPENAI_API_KEY present:', !!OPENAI_API_KEY);
   
-  try {
-    console.log('Calling Gemini API...');
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
-        generationConfig: { temperature: 1.2, maxOutputTokens: 1024 }
-      })
-    });
-    
-    const data = await response.json();
-    console.log('Gemini response status:', response.status);
-    console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
-    if (data.candidates && data.candidates[0].content.parts[0].text) {
-      const text = data.candidates[0].content.parts[0].text;
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+  // Try Gemini first
+  if (GEMINI_API_KEY) {
+    try {
+      console.log('Calling Gemini API...');
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
+          generationConfig: { temperature: 1.2, maxOutputTokens: 1024 }
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Gemini response status:', response.status);
+      
+      if (response.status === 200 && data.candidates && data.candidates[0].content.parts[0].text) {
+        const text = data.candidates[0].content.parts[0].text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        console.log('Gemini error:', data.error?.message || 'Unknown');
+      }
+    } catch (e) {
+      console.error('Gemini error:', e.message);
     }
-    return getMockRoast(content);
-  } catch (e) {
-    console.error('Gemini error:', e.message);
-    return getMockRoast(content);
   }
+  
+  // Try OpenAI as fallback
+  if (OPENAI_API_KEY) {
+    try {
+      console.log('Calling OpenAI API...');
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + OPENAI_API_KEY
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
+          temperature: 1.2,
+          max_tokens: 1024
+        })
+      });
+      
+      const data = await response.json();
+      console.log('OpenAI response status:', response.status);
+      
+      if (response.status === 200 && data.choices && data.choices[0].message.content) {
+        const text = data.choices[0].message.content;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        console.log('OpenAI error:', data.error?.message || 'Unknown');
+      }
+    } catch (e) {
+      console.error('OpenAI error:', e.message);
+    }
+  }
+  
+  // Fallback to mock
+  return getMockRoast(content);
 }
 
 function getMockRoast(content) {
@@ -120,5 +160,5 @@ res.send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name=
 
 app.listen(PORT, () => {
   console.log('RoastMeClaw running on port ' + PORT);
-  console.log('AI Mode: ' + (GEMINI_API_KEY ? 'GEMINI' : 'DEMO'));
+  console.log('AI Mode: ' + (GEMINI_API_KEY || OPENAI_API_KEY ? 'REAL AI' : 'DEMO'));
 });
