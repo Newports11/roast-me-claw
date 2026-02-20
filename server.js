@@ -64,6 +64,8 @@ async function generateRoast(type, content) {
     });
     
     const data = await response.json();
+    console.log('Gemini response status:', response.status);
+    console.log('Gemini response:', JSON.stringify(data).slice(0, 200));
     if (data.candidates && data.candidates[0].content.parts[0].text) {
       const text = data.candidates[0].content.parts[0].text;
       const jsonMatch = text.match(/\{[\s\S]*\}/);
