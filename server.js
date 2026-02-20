@@ -289,6 +289,23 @@ app.get('/', (req, res) => {
       font-size: 0.9rem;
       margin-top: 40px;
     }
+    .share-btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: #000;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+      text-align: center;
+      text-decoration: none;
+    }
+    .share-btn:hover {
+      background: #333;
+    }
   </style>
 </head>
 <body>
@@ -325,6 +342,7 @@ app.get('/', (req, res) => {
       <div class="score"><span id="score"></span><span>/10</span></div>
       <ul class="points" id="points"></ul>
       <p class="verdict" id="verdict"></p>
+      <a href="#" class="share-btn" id="share-btn" target="_blank">🐦 Share on X</a>
     </div>
 
     <p class="disclaimer">Built for fun. Don't take it personally. 🤖</p>
@@ -367,6 +385,11 @@ app.get('/', (req, res) => {
         document.getElementById('score').textContent = data.score;
         document.getElementById('points').innerHTML = data.points.map(p => '<li>' + p + '</li>').join('');
         document.getElementById('verdict').textContent = data.verdict;
+        
+        // Update share button
+        const tweetText = `🔥 I just got roasted by AI!\n\n${data.title}\nScore: ${data.score}/10\n\n${data.verdict}\n\nGet roasted at:`;
+        const shareUrl = 'https://roastmeclaw.com';
+        document.getElementById('share-btn').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText) + '&url=' + encodeURIComponent(shareUrl);
         
         document.getElementById('loading').classList.remove('show');
         document.getElementById('result').classList.add('show');
