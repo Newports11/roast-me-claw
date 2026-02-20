@@ -49,16 +49,16 @@ app.use(express.static('public'));
 
 const ROAST_PROMPT = (content) => `You are a brutally honest, savage website/product roaster. Roast: "${content}"
 
-Be specific. Roast: name, headline, design, copy, product, pricing, buzzwords.
+Be specific about what you see. Roast: name, headline, design, copy, product, pricing, buzzwords.
 
-Keep it SHORT and MEAN. Include:
-1. Short savage title (few words)
-2. 3 short roast points (1 sentence each)
+Make it HURT but funny. Most scores should be LOW (1-5). Only give high scores (7-10) if the site is genuinely impressive. Include:
+1. Savage title
+2. 5 specific roast points
 3. Score 1-10 (keep it low, make them earn high scores)
-4. One-line brutal verdict
+4. Brutal one-line verdict
 
 JSON only:
-{"title":"title","points":["p1","p2","p3"],score:3,"verdict":"verdict"}`;
+{"title":"title","points":["p1","p2","p3","p4","p5"],score:4,"verdict":"verdict"}`;
 
 async function generateRoast(type, content) {
   console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
@@ -73,7 +73,7 @@ async function generateRoast(type, content) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 512 }
+          generationConfig: { temperature: 0.8, maxOutputTokens: 1024 }
         })
       });
       
