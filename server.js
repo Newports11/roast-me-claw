@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 3002;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Simple DB
 let db = { roasts: [] };
@@ -114,6 +115,39 @@ async function generateRoast(type, content) {
     }
   }
   
+  // Try Groq as fallback (different free tier)
+  if (GROQ_API_KEY) {
+    try {
+      console.log('Calling Groq API...');
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + GROQ_API_KEY
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-70b-versatile',
+          messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
+          temperature: 1.2,
+          max_tokens: 1024
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Groq response status:', response.status);
+      
+      if (response.status === 200 && data.choices && data.choices[0].message.content) {
+        const text = data.choices[0].message.content;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      } else {
+        console.log('Groq error:', data.error?.message || 'Unknown');
+      }
+    } catch (e) {
+      console.error('Groq error:', e.message);
+    }
+  }
+  
   // Fallback to mock
   return getMockRoast(content);
 }
@@ -160,5 +194,5 @@ res.send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name=
 
 app.listen(PORT, () => {
   console.log('RoastMeClaw running on port ' + PORT);
-  console.log('AI Mode: ' + (GEMINI_API_KEY || OPENAI_API_KEY ? 'REAL AI' : 'DEMO'));
+  console.log('AI Mode: ' + (GEMINI_API_KEY || OPENAI_API_KEY || GROQ_API_KEY ? 'REAL AI' : 'DEMO'));
 });
