@@ -64,11 +64,11 @@ async function generateRoast(type, content) {
   console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
   console.log('OPENAI_API_KEY present:', !!OPENAI_API_KEY);
   
-  // Try OpenAI first
-  if (OPENAI_API_KEY) {
+  // Try Gemini first
+  if (GEMINI_API_KEY) {
     try {
-      console.log('Calling OpenAI API...');
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      console.log('Calling Gemini API...');
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
