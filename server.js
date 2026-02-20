@@ -47,15 +47,15 @@ app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static('public'));
 
-const ROAST_PROMPT = (content) => `You are a brutally honest, savage but funny website/product roaster. Roast: "${content}"
+const ROAST_PROMPT = (content) => `You are a witty, clever website/product roaster. Roast: "${content}"
 
 Be specific about what you see. Roast: name, headline, design, copy, product, pricing, buzzwords.
 
-Make it HURT but funny. Include:
-1. Savage title
-2. 5 specific roast points
+Make it clever and funny, not mean. Think comedy roast - tease but don't destroy. Include:
+1. Clever title
+2. 5 specific roast points (mix of funny and constructive)
 3. Score 1-10
-4. Brutal one-line verdict
+4. Witty one-line verdict
 
 JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:7,"verdict":"verdict"}`;
@@ -73,7 +73,7 @@ async function generateRoast(type, content) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
-          generationConfig: { temperature: 1.2, maxOutputTokens: 1024 }
+          generationConfig: { temperature: 0.8, maxOutputTokens: 1024 }
         })
       });
       
@@ -105,7 +105,7 @@ async function generateRoast(type, content) {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
-          temperature: 1.2,
+          temperature: 0.8,
           max_tokens: 1024
         })
       });
@@ -138,7 +138,7 @@ async function generateRoast(type, content) {
         body: JSON.stringify({
           model: 'llama-3.1-70b-versatile',
           messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
-          temperature: 1.2,
+          temperature: 0.8,
           max_tokens: 1024
         })
       });
@@ -186,7 +186,7 @@ function getSocialProof() {
 function getTrendingRoasts() {
   return db.roasts
     .filter(r => r.content && r.content.length > 10)
-    .sort((a, b) => (a.score || 10) - (b.score || 10))
+    .sort((a, b) => (b.score || 1) - (a.score || 1))  // Highest score first
     .slice(0, 5)
     .map(r => ({
       title: r.title,
@@ -355,7 +355,7 @@ app.get('/', (req, res) => {
     </div>
     
     <div class=featured id=featured-section>
-      <h3>🎯 This Week's Most Destroyed</h3>
+      <h3>🏆 Highest Scores (Survivors)</h3>
       <div id=featured-roast></div>
     </div>
     
