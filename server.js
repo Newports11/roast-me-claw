@@ -21,6 +21,7 @@ function saveDB() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 // Reset daily stats if new day
 function updateDailyStats() {
   const today = new Date().toISOString().split('T')[0];
+  if (!db.dailyStats) db.dailyStats = { date: today, count: 0 };
   if (db.dailyStats.date !== today) {
     db.dailyStats = { date: today, count: 0 };
   }
