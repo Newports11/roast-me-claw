@@ -33,7 +33,7 @@ function updateDailyStats() {
 
 // Rate limiting
 const rateLimit = {};
-const RATE_LIMIT = 10;
+const RATE_LIMIT = 100; // Per minute
 const RATE_WINDOW = 60000;
 
 function rateLimiter(req, res, next) {
