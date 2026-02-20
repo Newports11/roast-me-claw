@@ -16,7 +16,7 @@ try {
 } catch (e) {}
 function saveDB() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 
-// Security: Rate limiting
+// Rate limiting
 const rateLimit = {};
 const RATE_LIMIT = 10;
 const RATE_WINDOW = 60000;
@@ -31,26 +31,23 @@ function rateLimiter(req, res, next) {
   next();
 }
 
-// CORS
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static('public'));
 
-// Roast prompt
 const ROAST_PROMPT = (content) => `You are a brutally honest, savage but funny website/product roaster. Roast: "${content}"
 
 Be specific about what you see. Roast: name, headline, design, copy, product, pricing, buzzwords.
 
 Make it HURT but funny. Include:
 1. Savage title
-2. 5 specific roast points (reference REAL things)
+2. 5 specific roast points
 3. Score 1-10
 4. Brutal one-line verdict
 
 JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:7,"verdict":"verdict"}`;
 
-// AI Roast
 async function generateRoast(type, content) {
   if (!GEMINI_API_KEY) return getMockRoast(content);
   
@@ -79,16 +76,15 @@ async function generateRoast(type, content) {
 
 function getMockRoast(content) {
   const roasts = [
-    { title: "Another 'Innovative' Solution to a Problem Nobody Has", points: ["Tagline written by thesaurus on steroids", "Can't tell if startup or art project", "'Revolutionary' feature = Excel 1997", "Hero = buzzword salad", "Pricing hidden like treasure map"], score: 3, verdict: "Bold of you to assume anyone needs this" },
-    { title: "Peak Startup Energy Detected", points: ["Name sounds AI-generated", "About page = 'we're a family' cult energy", "Hero = stock photo of people pretending to work", "Five 'we're hiring' mentions", "CTA = 'Get Started' = verbal shrug"], score: 4, verdict: "4/10 would not click again" },
-    { title: "Y2K Aesthetic, 2026 Problems", points: ["Design = intern's WordPress project", "Value prop needs 30-min read", "Loading animation > TED talks", "Mobile responsive in theory only", "More typos than features"], score: 2, verdict: "What's killing the startup ecosystem" }
+    { title: "Another 'Innovative' Solution", points: ["Tagline = thesaurus on steroids", "Startup or art project?", "'Revolutionary' = Excel 1997", "Hero = buzzword salad", "Pricing hidden like treasure"], score: 3, verdict: "Bold to assume anyone needs this" },
+    { title: "Peak Startup Energy", points: ["Name sounds AI-generated", "About = 'we're a family' cult", "Hero = stock photo", "Five 'we're hiring'", "CTA = verbal shrug"], score: 4, verdict: "4/10 would not click again" },
+    { title: "Y2K Aesthetic, 2026 Problems", points: ["Design = intern's WordPress", "Value prop needs 30-min read", "Loading > TED talks", "Mobile responsive in theory", "More typos than features"], score: 2, verdict: "What's killing startup ecosystem" }
   ];
   const roast = roasts[Math.floor(Math.random() * roasts.length)];
-  if (content.toLowerCase().includes('ai')) { roast.points[0] = "AI in 2026? Revolutionary. Next: mobile app."; roast.score = Math.max(1, roast.score - 1); }
+  if (content.toLowerCase().includes('ai')) { roast.points[0] = "AI in 2026? Revolutionary."; roast.score = Math.max(1, roast.score - 1); }
   return roast;
 }
 
-// API: Generate roast
 app.post('/api/roast', rateLimiter, async (req, res) => {
   const { type, content } = req.body;
   if (!content) return res.status(400).json({ error: 'content required' });
@@ -114,12 +110,11 @@ app.get('/api/roast/:id', (req, res) => {
 
 app.get('/api/roasts', (req, res) => { res.json(db.roasts.slice(-20).reverse()); });
 
-// Frontend
 app.get('/', (req, res) => {
-res.send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoastMeClaw - Get Roasted by AI</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}.container{max-width:800px;margin:0 auto;padding:40px 20px}header{text-align:center;margin-bottom:50px}h1{font-size:4rem;margin-bottom:10px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tagline{color:#888;font-size:1.2rem}.input-section{background:#1a1a1a;border-radius:16px;padding:30px;margin-bottom:40px}textarea,input{width:100%;padding:16px;background:#0a0a0a;border:2px solid #2a2a2a;border-radius:8px;color:#fff;font-size:1rem;margin-bottom:15px}textarea:focus,input:focus{outline:none;border-color:#ff4d4d}textarea{min-height:120px;resize:vertical}.roast-btn{width:100%;padding:18px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);border:none;border-radius:8px;color:#fff;font-size:1.2rem;font-weight:bold;cursor:pointer}.loading{text-align:center;padding:40px;display:none}.loading.show{display:block}.loading-spinner{width:50px;height:50px;border:4px solid #333;border-top-color:#ff4d4d;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}@keyframes spin{to{transform:rotate(360deg)}}.result{background:#1a1a1a;border-radius:16px;padding:30px;display:none}.result.show{display:block}.result-title{font-size:2rem;color:#ff4d4d;margin-bottom:20px;text-align:center}.score{text-align:center;font-size:5rem;font-weight:bold;color:#ff9f43;margin:20px 0}.score span{font-size:2rem;color:#666}.points{list-style:none;margin:20px 0}.points li{padding:15px;background:#2a2a2a;border-radius:8px;margin-bottom:10px;font-size:1.1rem}.verdict{text-align:center;font-size:1.3rem;color:#ff4d4d;font-style:italic;margin-top:20px}.share-btn{display:block;width:100%;padding:15px;background:#000;border:2px solid #fff;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer;margin-top:20px;text-align:center;text-decoration:none}.disclaimer{text-align:center;color:#444;font-size:0.9rem;margin-top:40px}</style></head><body><div class=container><header><h1>RoastMeClaw</h1><p class=tagline>Get roasted by AI. No feelings allowed.</p></header><div class=input-section><textarea id=description placeholder="Describe your product... (e.g. A SaaS for scheduling meetings)"></textarea><button class=roast-btn onclick="doRoast()">ROAST ME</button></div><div class=loading id=loading><div class=loading-spinner></div><p>AI is sharpening its knives...</p></div><div class=result id=result><h2 class=result-title id=result-title></h2><div class=score><span id=score></span><span>/10</span></div><ul class=points id=points></ul><p class=verdict id=verdict></p><a href=# class=share-btn id=share-btn target=_blank>Share on X</a></div><p class=disclaimer>Built for fun. Do not take personally.</p></div><script>async function doRoast(){const content=document.getElementById("description").value;if(!content)return alert("Enter something to roast!");document.getElementById("loading").classList.add("show");document.getElementById("result").classList.remove("show");try{const res=await fetch("/api/roast",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"description",content})});const data=await res.json();document.getElementById("result-title").textContent=data.title;document.getElementById("score").textContent=data.score;document.getElementById("points").innerHTML=data.points.map(p=>"<li>"+p+"</li>").join("");document.getElementById("verdict").textContent=data.verdict;const tweetText="I just got roasted by AI! "+data.title+" Score: "+data.score+"/10 - "+data.verdict;document.getElementById("share-btn").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(tweetText);document.getElementById("loading").classList.remove("show");document.getElementById("result").classList.add("show");document.getElementById("result").scrollIntoView({behavior:"smooth"})}catch(e){alert("Roast failed. Try again.");document.getElementById("loading").classList.remove("show")}}</script></body></html>');
+res.send('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoastMeClaw - Get Roasted by AI</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}.container{max-width:800px;margin:0 auto;padding:40px 20px}header{text-align:center;margin-bottom:50px}h1{font-size:4rem;margin-bottom:10px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.tagline{color:#888;font-size:1.2rem}.input-section{background:#1a1a1a;border-radius:16px;padding:30px;margin-bottom:40px}textarea,input{width:100%;padding:16px;background:#0a0a0a;border:2px solid #2a2a2a;border-radius:8px;color:#fff;font-size:1rem;margin-bottom:15px}textarea:focus,input:focus{outline:none;border-color:#ff4d4d}textarea{min-height:120px;resize:vertical}.roast-btn{width:100%;padding:18px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);border:none;border-radius:8px;color:#fff;font-size:1.2rem;font-weight:bold;cursor:pointer}.loading{text-align:center;padding:40px;display:none}.loading.show{display:block}.loading-spinner{width:50px;height:50px;border:4px solid #333;border-top-color:#ff4d4d;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}@keyframes spin{to{transform:rotate(360deg)}}.result{background:#1a1a1a;border-radius:16px;padding:30px;display:none}.result.show{display:block}.result-title{font-size:2rem;color:#ff4d4d;margin-bottom:20px;text-align:center}.score{text-align:center;font-size:5rem;font-weight:bold;color:#ff9f43;margin:20px 0}.score span{font-size:2rem;color:#666}.points{list-style:none;margin:20px 0}.points li{padding:15px;background:#2a2a2a;border-radius:8px;margin-bottom:10px;font-size:1.1rem}.verdict{text-align:center;font-size:1.3rem;color:#ff4d4d;font-style:italic;margin-top:20px}.share-btn{display:block;width:100%;padding:15px;background:#000;border:2px solid #fff;border-radius:8px;color:#fff;font-size:1rem;cursor:pointer;margin-top:20px;text-align:center;text-decoration:none}.disclaimer{text-align:center;color:#444;font-size:0.9rem;margin-top:40px}</style></head><body><div class=container><header><h1>RoastMeClaw</h1><p class=tagline>Get roasted by AI. No feelings allowed.</p></header><div class=input-section><textarea id=description placeholder="Describe your product..."></textarea><button class=roast-btn onclick="doRoast()">ROAST ME</button></div><div class=loading id=loading><div class=loading-spinner></div><p>AI is sharpening its knives...</p></div><div class=result id=result><h2 class=result-title id=result-title></h2><div class=score><span id=score></span><span>/10</span></div><ul class=points id=points></ul><p class=verdict id=verdict></p><a href=# class=share-btn id=share-btn target=_blank>Share on X</a></div><p class=disclaimer>Built for fun.</p></div><script>async function doRoast(){const content=document.getElementById("description").value;if(!content)return alert("Enter something to roast!");document.getElementById("loading").classList.add("show");document.getElementById("result").classList.remove("show");try{const res=await fetch("/api/roast",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"description",content})});const data=await res.json();document.getElementById("result-title").textContent=data.title;document.getElementById("score").textContent=data.score;document.getElementById("points").innerHTML=data.points.map(p=>"<li>"+p+"</li>").join("");document.getElementById("verdict").textContent=data.verdict;const tweetText="I got roasted by AI! "+data.title+" Score: "+data.score+"/10 - "+data.verdict;document.getElementById("share-btn").href="https://twitter.com/intent/tweet?text="+encodeURIComponent(tweetText);document.getElementById("loading").classList.remove("show");document.getElementById("result").classList.add("show")}catch(e){alert("Roast failed.");document.getElementById("loading").classList.remove("show")}}</script></body></html>');
 });
 
 app.listen(PORT, () => {
   console.log('RoastMeClaw running on port ' + PORT);
-  console.log('AI Mode: ' + (GEMINI_API_KEY ? 'GEMINI (real roasts!)' : 'DEMO (mock roasts)'));
+  console.log('AI Mode: ' + (GEMINI_API_KEY ? 'GEMINI' : 'DEMO'));
 });
