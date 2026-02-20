@@ -74,6 +74,7 @@ JSON only:
 async function generateRoast(type, content) {
   console.log('GEMINI_API_KEY present:', !!GEMINI_API_KEY);
   console.log('OPENAI_API_KEY present:', !!OPENAI_API_KEY);
+  console.log('Generating roast for content:', content.substring(0, 50));
   
   // Try Gemini first
   if (GEMINI_API_KEY) {
