@@ -16,8 +16,50 @@ try {
 } catch (e) {}
 function saveDB() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
 
-app.use(cors());
-app.use(express.json());
+// Security: Rate limiting (simple in-memory)
+const rateLimit = {};
+const RATE_LIMIT = 10; // requests per minute
+const RATE_WINDOW = 60000; // 1 minute
+
+function rateLimiter(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  
+  if (!rateLimit[ip]) {
+    rateLimit[ip] = { count: 1, reset: now + RATE_WINDOW };
+    return next();
+  }
+  
+  if (now > rateLimit[ip].reset) {
+    rateLimit[ip] = { count: 1, reset: now + RATE_WINDOW };
+    return next();
+  }
+  
+  if (rateLimit[ip].count > RATE_LIMIT) {
+    return res.status(429).json({ error: 'Too many requests. Slow down!' });
+  }
+  
+  rateLimit[ip].count++;
+  next();
+}
+
+// CORS: Allow only specific origins in production
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3002', 'http://localhost:3000'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  }
+}));
+
+app.use(express.json({ limit: '100kb' })); // Limit request body size
 app.use(express.static('public'));
 
 // Roast prompt - meaner and more specific
@@ -150,10 +192,14 @@ function getMockRoast(content) {
 }
 
 // API: Generate roast
-app.post('/api/roast', async (req, res) => {
+app.post('/api/roast', rateLimiter, async (req, res) => {
   const { type, content } = req.body;
   
+  // Input validation
   if (!content) return res.status(400).json({ error: 'content required' });
+  if (typeof content !== 'string') return res.status(400).json({ error: 'content must be string' });
+  if (content.length < 3) return res.status(400).json({ error: 'content too short' });
+  if (content.length > 2000) return res.status(400).json({ error: 'content too long (max 2000 chars)' });
   
   try {
     const roast = await generateRoast(type, content);
