@@ -338,9 +338,9 @@ app.get('/', (req, res) => {
 </head>
 <body>
   <div class=container>
-    <header>
-      <img src="/logo.png" alt="RoastMeClaw" style="height:80px;margin-bottom:10px">
-      <h1>RoastMeClaw</h1>
+    <header style="text-align:center;margin-bottom:30px">
+      <img src="/logo.png" alt="RoastMeClaw" style="height:120px;max-width:100%;border-radius:12px;box-shadow: 0 4px 20px rgba(255,77,77,0.3)">
+      <h1 style="font-size:3rem;margin-top:15px;background:linear-gradient(135deg,#ff4d4d,#ff9f43);-webkit-background-clip:text;-webkit-text-fill-color:transparent">RoastMeClaw</h1>
       <p class=tagline>Get roasted by AI. No feelings allowed.</p>
     </header>
     
