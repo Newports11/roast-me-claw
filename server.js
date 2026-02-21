@@ -52,14 +52,14 @@ app.use(express.static('public'));
 
 const ROAST_PROMPT = (content) => `ROAST THIS EXACTLY: "${content}"
 
-Be brutal and specific. Include:
-1. Title based on the name
-2. 5 roast points about this specific thing
-3. Score 1-10 (keep it low)
-4. One-line verdict
+You are MEAN. Be SCATHING. Make it HURT. Be specific and brutal. Include:
+1. Savage title
+2. 5 CRUEL roast points
+3. Score 1-10 (MOSTLY 1-4, rarely higher)
+4. Brutal verdict
 
 JSON only:
-{"title":"title","points":["p1","p2","p3","p4","p5"],score:3,"verdict":"verdict"}`;
+{"title":"title","points":["p1","p2","p3","p4","p5"],score:2,"verdict":"verdict"}`;
 
 // Helper for API calls with retry
 async function fetchWithRetry(url, options, retries = 2) {
