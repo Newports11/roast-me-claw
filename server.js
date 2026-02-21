@@ -311,7 +311,7 @@ app.get('/', (req, res) => {
     
     <div class=input-section style="margin-top:20px;border:1px solid #1da1f2">
       <p style="color:#1da1f2;margin-bottom:15px;text-align:center;font-weight:bold">Roast a Tweet 🐦</p>
-      <input type=text id=tweet-url placeholder="Paste a tweet URL...">
+      <textarea id=tweet-content placeholder="Paste the tweet text here..."></textarea>
       <button class=roast-btn style="background:#1da1f2" onclick="doRoastTweet()">ROAST TWEET</button>
     </div>
     
@@ -415,9 +415,8 @@ app.get('/', (req, res) => {
     }
     
     async function doRoastTweet() {
-      const url = document.getElementById("tweet-url").value;
-      if (!url) return alert("Enter a tweet URL!");
-      if (!url.includes("x.com") && !url.includes("twitter.com")) return alert("Please enter a valid X/Twitter URL!");
+      const content = document.getElementById("tweet-content").value;
+      if (!content) return alert("Paste the tweet text first!");
       
       document.getElementById("loading").classList.add("show");
       document.getElementById("result").classList.remove("show");
@@ -426,7 +425,7 @@ app.get('/', (req, res) => {
         const res = await fetch("/api/roast", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({type: "tweet", content: url})
+          body: JSON.stringify({type: "tweet", content})
         });
         const data = await res.json();
         
