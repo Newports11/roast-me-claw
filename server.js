@@ -54,15 +54,16 @@ const ROAST_PROMPT = (content, type) => {
   if (type === 'tweet') {
     return `ROAST THIS TWEET: "${content}"
 
-This is a tweet. Roast the content, the take, the energy, the vibe.
-Make it mean and funny. Include:
-1. Savage title about the tweet
-2. 5 roast points about what's wrong/boring/funny
-3. Score 1-10 (mostly 1-4)
+Be SHORT and MEAN. Roast the SPECIFIC content, the take, the energy.
+Make it personal to what's actually said.
+Include:
+1. Short savage title
+2. 3 short roast points (1 sentence each)
+3. Score 1-10 (mostly 1-3)
 4. One-line brutal verdict
 
 JSON only:
-{"title":"title","points":["p1","p2","p3","p4","p5"],score:2,"verdict":"verdict"}`;
+{"title":"title","points":["p1","p2","p3"],score:2,"verdict":"verdict"}`;
   }
   
   return `ROAST THIS EXACTLY: "${content}"
