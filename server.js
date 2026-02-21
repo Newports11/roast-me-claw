@@ -50,7 +50,22 @@ app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static('public'));
 
-const ROAST_PROMPT = (content) => `ROAST THIS EXACTLY: "${content}"
+const ROAST_PROMPT = (content, type) => {
+  if (type === 'tweet') {
+    return `ROAST THIS TWEET: "${content}"
+
+This is a tweet. Roast the content, the take, the energy, the vibe.
+Make it mean and funny. Include:
+1. Savage title about the tweet
+2. 5 roast points about what's wrong/boring/funny
+3. Score 1-10 (mostly 1-4)
+4. One-line brutal verdict
+
+JSON only:
+{"title":"title","points":["p1","p2","p3","p4","p5"],score:2,"verdict":"verdict"}`;
+  }
+  
+  return `ROAST THIS EXACTLY: "${content}"
 
 You are MEAN. Be SCATHING. Make it HURT. Be specific and brutal. Include:
 1. Savage title
@@ -60,6 +75,7 @@ You are MEAN. Be SCATHING. Make it HURT. Be specific and brutal. Include:
 
 JSON only:
 {"title":"title","points":["p1","p2","p3","p4","p5"],score:2,"verdict":"verdict"}`;
+};
 
 // Helper for API calls with retry
 async function fetchWithRetry(url, options, retries = 2) {
@@ -92,7 +108,7 @@ async function generateRoast(type, content) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: ROAST_PROMPT(content) }] }],
+          contents: [{ parts: [{ text: ROAST_PROMPT(content, type) }] }],
           generationConfig: { temperature: 0.8, maxOutputTokens: 1024 }
         })
       });
@@ -124,7 +140,7 @@ async function generateRoast(type, content) {
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
+          messages: [{ role: 'user', content: ROAST_PROMPT(content, type) }],
           temperature: 0.8,
           max_tokens: 1024
         })
@@ -157,7 +173,7 @@ async function generateRoast(type, content) {
         },
         body: JSON.stringify({
           model: 'llama-3.1-70b-versatile',
-          messages: [{ role: 'user', content: ROAST_PROMPT(content) }],
+          messages: [{ role: 'user', content: ROAST_PROMPT(content, type) }],
           temperature: 0.8,
           max_tokens: 1024
         })
@@ -292,6 +308,12 @@ app.get('/', (req, res) => {
       <button class=roast-btn onclick="doRoastFriend()">ROAST THEIRS</button>
     </div>
     
+    <div class=input-section style="margin-top:20px;border:1px solid #1da1f2">
+      <p style="color:#1da1f2;margin-bottom:15px;text-align:center;font-weight:bold">Roast a Tweet 🐦</p>
+      <input type=text id=tweet-url placeholder="Paste a tweet URL...">
+      <button class=roast-btn style="background:#1da1f2" onclick="doRoastTweet()">ROAST TWEET</button>
+    </div>
+    
     <div class=loading id=loading>
       <div class=loading-spinner></div>
       <p>AI is sharpening its knives...</p>
@@ -377,6 +399,43 @@ app.get('/', (req, res) => {
         
         const tweetText = "I roasted " + content.substring(0,30) + "... with @roastmeclaw! Score: " + data.score + "/10 - " + data.verdict;
         document.getElementById("share-btn").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
+        
+        document.getElementById("loading").classList.remove("show");
+        document.getElementById("result").classList.add("show");
+        
+        if (data.socialProof) {
+          document.getElementById("roast-today").textContent = data.socialProof.today;
+          document.getElementById("roast-all").textContent = data.socialProof.allTime;
+        }
+      } catch(e) {
+        alert("Roast failed.");
+        document.getElementById("loading").classList.remove("show");
+      }
+    }
+    
+    async function doRoastTweet() {
+      const url = document.getElementById("tweet-url").value;
+      if (!url) return alert("Enter a tweet URL!");
+      if (!url.includes("x.com") && !url.includes("twitter.com")) return alert("Please enter a valid X/Twitter URL!");
+      
+      document.getElementById("loading").classList.add("show");
+      document.getElementById("result").classList.remove("show");
+      
+      try {
+        const res = await fetch("/api/roast", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({type: "tweet", content: url})
+        });
+        const data = await res.json();
+        
+        document.getElementById("result-title").textContent = data.title;
+        document.getElementById("score").textContent = data.score;
+        document.getElementById("points").innerHTML = data.points.map(p => "<li>"+p+"</li>").join("");
+        document.getElementById("verdict").textContent = data.verdict;
+        
+        const roastText = data.points[0] + " " + data.points[1];
+        document.getElementById("share-btn").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(roastText + " 🔥");
         
         document.getElementById("loading").classList.remove("show");
         document.getElementById("result").classList.add("show");
