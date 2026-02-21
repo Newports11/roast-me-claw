@@ -286,6 +286,12 @@ app.get('/', (req, res) => {
       <button class=roast-btn onclick="doRoast()">ROAST ME</button>
     </div>
     
+    <div class=input-section style="margin-top:20px;border:1px solid #ff4d4d">
+      <p style="color:#ff4d4d;margin-bottom:15px;text-align:center;font-weight:bold">Roast Someone Else's Project 🔥</p>
+      <textarea id=friend-description placeholder="Paste your friend's URL or describe their project..."></textarea>
+      <button class=roast-btn onclick="doRoastFriend()">ROAST THEIRS</button>
+    </div>
+    
     <div class=loading id=loading>
       <div class=loading-spinner></div>
       <p>AI is sharpening its knives...</p>
@@ -335,6 +341,41 @@ app.get('/', (req, res) => {
         document.getElementById("verdict").textContent = data.verdict;
         
         const tweetText = "I got roasted by @roastmeclaw! " + data.title + " Score: " + data.score + "/10 - " + data.verdict;
+        document.getElementById("share-btn").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
+        
+        document.getElementById("loading").classList.remove("show");
+        document.getElementById("result").classList.add("show");
+        
+        if (data.socialProof) {
+          document.getElementById("roast-today").textContent = data.socialProof.today;
+          document.getElementById("roast-all").textContent = data.socialProof.allTime;
+        }
+      } catch(e) {
+        alert("Roast failed.");
+        document.getElementById("loading").classList.remove("show");
+      }
+    }
+    
+    async function doRoastFriend() {
+      const content = document.getElementById("friend-description").value;
+      if (!content) return alert("Enter something to roast!");
+      document.getElementById("loading").classList.add("show");
+      document.getElementById("result").classList.remove("show");
+      
+      try {
+        const res = await fetch("/api/roast", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({type: "description", content})
+        });
+        const data = await res.json();
+        
+        document.getElementById("result-title").textContent = data.title;
+        document.getElementById("score").textContent = data.score;
+        document.getElementById("points").innerHTML = data.points.map(p => "<li>"+p+"</li>").join("");
+        document.getElementById("verdict").textContent = data.verdict;
+        
+        const tweetText = "I roasted " + content.substring(0,30) + "... with @roastmeclaw! Score: " + data.score + "/10 - " + data.verdict;
         document.getElementById("share-btn").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
         
         document.getElementById("loading").classList.remove("show");
