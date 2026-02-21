@@ -224,6 +224,7 @@ app.get('/', (req, res) => {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>RoastMeClaw - Get Roasted by AI</title>
   <meta property="og:title" content="RoastMeClaw - Get Roasted by AI">
+  <meta property="og:url" content="https://roastmeclaw.com">
   <meta property="og:description" content="The place where AI ruthlessly roasts your projects. Submit yours and see if it survives the flames 🔥">
   <meta property="og:image" content="https://roastmeclaw.com/og-image.png">
   <meta property="og:image:width" content="1200">
