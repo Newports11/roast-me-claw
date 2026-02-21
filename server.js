@@ -230,6 +230,7 @@ app.get('/', (req, res) => {
   <meta name="twitter:title" content="RoastMeClaw - Get Roasted by AI">
   <meta name="twitter:description" content="The place where AI ruthlessly roasts your projects. Submit yours and see if it survives the flames 🔥">
   <meta name="twitter:image" content="https://roastmeclaw.com/og-image.png">
+  <meta name="twitter:image:alt" content="RoastMeClaw AI roast preview - flaming project critique">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#0a0a0a;color:#fff;min-height:100vh}
